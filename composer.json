@@ -1,0 +1,15 @@
+{
+    "name": "satori/middleware-action",
+    "description": "Action middleware",
+    "keywords": ["Satori", "Middleware", "Action"],
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Yuriy Davletshin",
+            "email": "yuriy.davletshin@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=7.0"
+    }
+}
