@@ -1,6 +1,12 @@
 <?php
-declare(strict_types=1);
 
+/**
+ * @author    Yuriy Davletshin <yuriy.davletshin@gmail.com>
+ * @copyright 2017 Yuriy Davletshin
+ * @license   MIT
+ */
+
+declare(strict_types=1);
 
 $app['middleware.action'] = function (\Generator $next) use ($app) {
     $app->notify('start_action');
