@@ -8,33 +8,48 @@
 
 declare(strict_types=1);
 
-$app['middleware.action'] = function (\Generator $next) use ($app) {
-    $app->notify('start_action');
-    $capsule = yield;
-    $capsule['headers'] = [];
-    $errorActionName = $app['service.error_action'] ?? 'errorAction';
-    switch ($capsule['http.status']) {
-        case 200:
-            break;
+namespace Satori\Middleware\Action;
 
-        case 404:
-        case 405:
-            $capsule['action'] = $errorActionName;
-            break;
+use Satori\Application\ApplicationInterface;
 
-        default:
-            $capsule['http.status'] = 500;
-            $capsule['action'] = $errorActionName;
-            break;
-    }
-    $action = $app->{$capsule['action']};
-    $capsule = $action($capsule);
-    if ($capsule->hasError()) {
-        $action = $app->$errorActionName;
+/**
+ * Initializes the action middleware.
+ *
+ * @param ApplicationInterface  $app   The application.
+ * @param string                $id    The unique name of the middleware.
+ * @param array<string, string> $names 
+ *    The array with names `['error_action' => 'errorAction']`.
+ */
+function init(ApplicationInterface $app, string $id, array $names)
+{
+    $app[$id] = function (\Generator $next) use ($app, $names) {
+        $app->notify('start_action');
+        $capsule = yield;
+        $capsule['headers'] = [];
+        $errorActionName = $names['error_action'];
+        switch ($capsule['http.status']) {
+            case 200:
+                break;
+
+            case 404:
+            case 405:
+                $capsule['action'] = $errorActionName;
+                break;
+
+            default:
+                $capsule['http.status'] = 500;
+                $capsule['action'] = $errorActionName;
+                break;
+        }
+        $action = $app->{$capsule['action']};
         $capsule = $action($capsule);
-    }
-    $app->notify('finish_action');
-    $next->send($capsule);
+        if ($capsule->hasError()) {
+            $action = $app->$errorActionName;
+            $capsule = $action($capsule);
+        }
+        $app->notify('finish_action');
+        $next->send($capsule);
 
-    return $next->getReturn();
-};
+        return $next->getReturn();
+    };
+}
