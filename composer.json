@@ -12,5 +12,10 @@
     "require": {
         "php": ">=7.0",
         "satori/application": "dev-master"
+    },
+    "autoload": {
+        "files": [
+            "src/action.php"
+        ]
     }
 }
