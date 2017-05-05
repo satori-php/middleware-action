@@ -42,7 +42,11 @@ function init(ApplicationInterface $app, string $id, array $names)
                 break;
         }
         $action = $app->{$capsule['action']};
-        $capsule = $action($capsule);
+        try {
+            $capsule = $action($capsule);
+        } catch (\Exception $e) {
+            $capsule->setError(500, $e->getMessage());
+        }
         if ($capsule->hasError()) {
             $action = $app->$errorActionName;
             $capsule = $action($capsule);
