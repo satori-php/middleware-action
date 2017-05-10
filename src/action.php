@@ -25,7 +25,7 @@ function init(ApplicationInterface $app, string $id, array $names)
     $app[$id] = function (\Generator $next) use ($app, $names) {
         $app->notify('start_action');
         $capsule = yield;
-        $capsule['headers'] = [];
+        $capsule['http.headers'] = [];
         $errorActionName = $names['error_action'];
         switch ($capsule['http.status']) {
             case 200:
@@ -45,9 +45,10 @@ function init(ApplicationInterface $app, string $id, array $names)
         try {
             $capsule = $action($capsule);
         } catch (\Exception $e) {
-            $capsule->setError($e->getCode(), $e->getMessage());
+            $capsule['http.status'] = 500;
+            $capsule['exception'] = $e;
         }
-        if ($capsule->hasError()) {
+        if (isset($capsule['exception']) || isset($capsule['error.message'])) {
             $action = $app->$errorActionName;
             $capsule = $action($capsule);
         }
