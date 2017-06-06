@@ -25,32 +25,27 @@ function init(ApplicationInterface $app, string $id, array $names)
     $app[$id] = function (\Generator $next) use ($app, $names) {
         $app->notify('start_action');
         $capsule = yield;
-        $capsule['http.headers'] = [];
-        $errorActionName = $names['error_action'];
+        $capsule['http.status'] = $capsule['http.status'] ?? 500;
         switch ($capsule['http.status']) {
-            case 200:
-                break;
-
+            case 403:
             case 404:
             case 405:
-                $capsule['action'] = $errorActionName;
-                break;
-
-            default:
+            case 500:
+                $capsule['action'] = $names['error_action'];
+        }
+        if ($capsule['action']) {
+            $capsule['http.headers'] = $capsule['http.headers'] ?? [];
+            $action = $app->{$capsule['action']};
+            try {
+                $capsule = $action($capsule);
+            } catch (\Exception $e) {
                 $capsule['http.status'] = 500;
-                $capsule['action'] = $errorActionName;
-                break;
-        }
-        $action = $app->{$capsule['action']};
-        try {
-            $capsule = $action($capsule);
-        } catch (\Exception $e) {
-            $capsule['http.status'] = 500;
-            $capsule['exception'] = $e;
-        }
-        if (isset($capsule['exception']) || isset($capsule['error.message'])) {
-            $action = $app->$errorActionName;
-            $capsule = $action($capsule);
+                $capsule['exception'] = $e;
+            }
+            if (isset($capsule['exception']) || isset($capsule['error.message'])) {
+                $action = $app->{$names['error_action']};
+                $capsule = $action($capsule);
+            }
         }
         $app->notify('finish_action');
         $next->send($capsule);
