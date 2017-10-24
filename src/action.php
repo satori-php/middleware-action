@@ -38,7 +38,7 @@ function init(ApplicationInterface $app, string $id, array $names)
             $action = $app->{$capsule['action']};
             try {
                 $capsule = $action($capsule);
-            } catch (\Exception $e) {
+            } catch (\RuntimeException $e) {
                 $capsule['http.status'] = 500;
                 $capsule['exception'] = $e;
             }
